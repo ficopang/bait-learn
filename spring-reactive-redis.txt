@@ -1,0 +1,181 @@
+@Configuration
+public class UserRouter {
+    @Bean
+    public RouterFunction<ServerResponse> userRoutes(UserHandler handler) {
+        return RouterFunctions.route()
+            .POST("/users", handler::createUser)
+            .GET("/users/{id}", handler::getUserById)
+            .GET("/users", handler::getAllUsers)
+            .PUT("/users/{id}", handler::updateUser)
+            .DELETE("/users/{id}", handler::deleteUser)
+            .build();
+    }
+}
+
+@Service
+public class UserService {
+    private final UserRepository userRepository;
+    private final ReactiveStringRedisTemplate redisTemplate;
+    private final Gson gson = new Gson();
+
+    public UserService(UserRepository userRepository, ReactiveStringRedisTemplate redisTemplate) {
+        this.userRepository = userRepository;
+        this.redisTemplate = redisTemplate;
+    }
+
+    private String key(String id) {
+        return "user:" + id;
+    }
+
+    // CREATE
+    public Mono<User> createUser(User user) {
+        return userRepository.save(user)
+            .flatMap(saved -> {
+                String json = gson.toJson(saved);
+                return redisTemplate.opsForValue().set(key(saved.getId()), json)
+                        .thenReturn(saved);
+            });
+    }
+
+    // READ
+    public Mono<User> getUserById(String id) {
+        return redisTemplate.opsForValue().get(key(id))
+            .flatMap(json -> Mono.just(gson.fromJson(json, User.class)))
+            .switchIfEmpty(
+                userRepository.findById(id)
+                    .flatMap(user -> redisTemplate.opsForValue()
+                        .set(key(id), gson.toJson(user))
+                        .thenReturn(user))
+            );
+    }
+
+    // READ ALL
+    public Flux<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    // UPDATE
+    public Mono<User> updateUser(String id, User updated) {
+        return userRepository.findById(id)
+            .flatMap(existing -> {
+                existing.setName(updated.getName());
+                existing.setEmail(updated.getEmail());
+                return userRepository.save(existing);
+            })
+            .flatMap(saved -> redisTemplate.opsForValue()
+                .set(key(saved.getId()), gson.toJson(saved))
+                .thenReturn(saved));
+    }
+
+    // DELETE
+    public Mono<Void> deleteUser(String id) {
+        return userRepository.deleteById(id)
+            .then(redisTemplate.delete(key(id)).then());
+    }
+}
+
+@Component
+public class UserHandler {
+
+    private final UserService userService;
+
+    public UserHandler(UserService userService) {
+        this.userService = userService;
+    }
+
+    // CREATE
+    public Mono<ServerResponse> createUser(ServerRequest request) {
+        return request.bodyToMono(User.class)
+            .flatMap(userService::createUser)
+            .flatMap(user -> ServerResponse.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(user));
+    }
+
+    // READ (by ID)
+    public Mono<ServerResponse> getUserById(ServerRequest request) {
+        String id = request.pathVariable("id");
+        return userService.getUserById(id)
+            .flatMap(user -> ServerResponse.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(user))
+            .switchIfEmpty(ServerResponse.notFound().build());
+    }
+
+    // READ ALL
+    public Mono<ServerResponse> getAllUsers(ServerRequest request) {
+        return ServerResponse.ok()
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(userService.getAllUsers(), User.class);
+    }
+
+    // UPDATE
+    public Mono<ServerResponse> updateUser(ServerRequest request) {
+        String id = request.pathVariable("id");
+        return request.bodyToMono(User.class)
+            .flatMap(user -> userService.updateUser(id, user))
+            .flatMap(updated -> ServerResponse.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(updated))
+            .switchIfEmpty(ServerResponse.notFound().build());
+    }
+
+    // DELETE
+    public Mono<ServerResponse> deleteUser(ServerRequest request) {
+        String id = request.pathVariable("id");
+        return userService.deleteUser(id)
+            .then(ServerResponse.noContent().build());
+    }
+}
+
+@RestController
+@RequestMapping("/users")
+public class UserController {
+    private final UserService userService;
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    // CREATE
+    @PostMapping
+    public Mono<User> createUser(@RequestBody User user) {
+        return userService.createUser(user);
+    }
+
+    // READ (by ID)
+    @GetMapping("/{id}")
+    public Mono<User> getUserById(@PathVariable String id) {
+        return userService.getUserById(id);
+    }
+
+    // READ ALL
+    @GetMapping
+    public Flux<User> getAllUsers() {
+        return userService.getAllUsers();
+    }
+
+    // UPDATE
+    @PutMapping("/{id}")
+    public Mono<User> updateUser(@PathVariable String id, @RequestBody User user) {
+        return userService.updateUser(id, user);
+    }
+
+    // DELETE
+    @DeleteMapping("/{id}")
+    public Mono<Void> deleteUser(@PathVariable String id) {
+        return userService.deleteUser(id);
+    }
+}
+
+@Table("users")
+public class User {
+    @Id
+    private String id;
+    private String name;
+    private String email;
+
+    // getters & setters
+}
+
+public interface UserRepository extends ReactiveCrudRepository<User, String> {
+}
