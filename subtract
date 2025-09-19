@@ -1,0 +1,56 @@
+public Mono<ServerResponse> subtractAvailableLimit(ServerRequest request) {
+    Integer id = Integer.valueOf(request.pathVariable("id"));
+    String roleName = jwtUtil.getRoleName(request);
+
+    if (roleName.equals(ApplicationConstant.roleUnauthenticated) || roleName.isEmpty()) {
+        return ServerResponse.status(403).build();
+    }
+
+    // Example: Only Maker can subtract limit
+    if (!roleName.equals(ApplicationConstant.roleMaker)) {
+        return ServerResponse.status(403).bodyValue(Map.of("error", "Only Maker can subtract limit"));
+    }
+
+    return request.bodyToMono(Map.class) // expecting { "subtractAmount": 1000 }
+            .flatMap(body -> {
+                BigDecimal subtractAmount = new BigDecimal(body.get("subtractAmount").toString());
+
+                return loanLimitService.subtractAvailableLimit(id, subtractAmount);
+            })
+            .flatMap(updated -> ServerResponse.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(updated))
+            .onErrorResume(IllegalArgumentException.class, ex ->
+                    ServerResponse.status(HttpStatus.BAD_REQUEST)
+                            .bodyValue(Map.of("error", ex.getMessage())))
+            .switchIfEmpty(ServerResponse.notFound().build());
+}
+
+public Mono<LoanLimitResponse> addAvailableLimit(Integer id, BigDecimal addAmount) {
+    log.info("Adding {} to available limit of ID: {}", addAmount, id);
+
+    return loanLimitRepository.findById(id)
+            .switchIfEmpty(Mono.error(new IllegalArgumentException("Loan limit not found for ID: " + id)))
+            .flatMap(existing -> {
+                if (addAmount == null || addAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                    return Mono.error(new IllegalArgumentException("Add amount must be > 0"));
+                }
+
+                // Optional: prevent exceeding overall limitAmount
+                if (existing.getAvailableAmount().add(addAmount).compareTo(existing.getLimitAmount()) > 0) {
+                    return Mono.error(new IllegalArgumentException("Available amount cannot exceed limit amount"));
+                }
+
+                existing.setAvailableAmount(existing.getAvailableAmount().add(addAmount));
+                existing.setModifiedAt(LocalDateTime.now());
+
+                return loanLimitRepository.save(existing)
+                        .doOnNext(saved -> {
+                            log.info("Updated available amount for ID {}: {}", id, saved.getAvailableAmount());
+                            redisTemplate.opsForValue()
+                                    .set(key(String.valueOf(saved.getLimit_id())), toJson(saved), Duration.ofMinutes(5))
+                                    .subscribe();
+                        });
+            })
+            .map(this::toResponse);
+}
