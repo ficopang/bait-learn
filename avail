@@ -1,0 +1,56 @@
+public Mono<LoanLimitResponse> addAvailableLimit(Integer id, BigDecimal addAmount) {
+    log.info("Adding {} to available limit of ID: {}", addAmount, id);
+
+    return loanLimitRepository.findById(id)
+            .switchIfEmpty(Mono.error(new IllegalArgumentException("Loan limit not found for ID: " + id)))
+            .flatMap(existing -> {
+                if (addAmount == null || addAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                    return Mono.error(new IllegalArgumentException("Add amount must be > 0"));
+                }
+
+                // Optional: prevent exceeding overall limitAmount
+                if (existing.getAvailableAmount().add(addAmount).compareTo(existing.getLimitAmount()) > 0) {
+                    return Mono.error(new IllegalArgumentException("Available amount cannot exceed limit amount"));
+                }
+
+                existing.setAvailableAmount(existing.getAvailableAmount().add(addAmount));
+                existing.setModifiedAt(LocalDateTime.now());
+
+                return loanLimitRepository.save(existing)
+                        .doOnNext(saved -> {
+                            log.info("Updated available amount for ID {}: {}", id, saved.getAvailableAmount());
+                            redisTemplate.opsForValue()
+                                    .set(key(String.valueOf(saved.getLimit_id())), toJson(saved), Duration.ofMinutes(5))
+                                    .subscribe();
+                        });
+            })
+            .map(this::toResponse);
+}
+
+public Mono<LoanLimitResponse> subtractAvailableLimit(Integer id, BigDecimal subtractAmount) {
+    log.info("Subtracting {} from available limit of ID: {}", subtractAmount, id);
+
+    return loanLimitRepository.findById(id)
+            .switchIfEmpty(Mono.error(new IllegalArgumentException("Loan limit not found for ID: " + id)))
+            .flatMap(existing -> {
+                if (subtractAmount == null || subtractAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                    return Mono.error(new IllegalArgumentException("Subtract amount must be > 0"));
+                }
+
+                if (existing.getAvailableAmount().compareTo(subtractAmount) < 0) {
+                    return Mono.error(new IllegalArgumentException("Insufficient available limit"));
+                }
+
+                existing.setAvailableAmount(existing.getAvailableAmount().subtract(subtractAmount));
+                existing.setModifiedAt(LocalDateTime.now());
+
+                return loanLimitRepository.save(existing)
+                        .doOnNext(saved -> {
+                            log.info("Updated available amount for ID {}: {}", id, saved.getAvailableAmount());
+                            redisTemplate.opsForValue()
+                                    .set(key(String.valueOf(saved.getLimit_id())), toJson(saved), Duration.ofMinutes(5))
+                                    .subscribe();
+                        });
+            })
+            .map(this::toResponse);
+}
