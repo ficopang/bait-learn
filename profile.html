@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My CV</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    header {
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      color: white;
+      text-align: center;
+      padding: 2rem 1rem;
+      border-bottom: 4px solid #007acc;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    section {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      border-bottom: 2px solid #eee;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+      color: #007acc;
+    }
+
+    article {
+      margin-bottom: 1rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      background: #222;
+      color: #aaa;
+      margin-top: 2rem;
+    }
+
+    /* --- Responsive Design --- */
+    @media (max-width: 768px) {
+      main {
+        grid-template-columns: 1fr; /* stack columns */
+      }
+
+      header h1 {
+        font-size: 1.6rem;
+      }
+
+      h2 {
+        font-size: 1.2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        font-size: 0.95rem;
+      }
+
+      header {
+        padding: 1.5rem 1rem;
+      }
+
+      header h1 {
+        font-size: 1.4rem;
+      }
+
+      section {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="profileName">Your Name</h1>
+    <p id="profileTitle">Your Title (e.g. Software Engineer)</p>
+  </header>
+
+  <main>
+    <!-- Left Column -->
+    <div>
+      <section>
+        <h2>About Me</h2>
+        <p id="profileSummary">Your professional summary will appear here...</p>
+      </section>
+
+      <section>
+        <h2>Skills</h2>
+        <ul id="skillsList">
+          <li>JavaScript</li>
+          <li>HTML & CSS</li>
+          <li>React / Vue</li>
+          <li>Spring Boot</li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- Right Column -->
+    <div>
+      <section>
+        <h2>Academic Experience</h2>
+        <article>
+          <h3 id="academicSchool">Your School Name</h3>
+          <p id="academicDegree">Your Degree</p>
+          <p id="academicYears">Years Attended</p>
+        </article>
+      </section>
+
+      <section>
+        <h2>Work Experience</h2>
+        <article>
+          <h3 id="workTitle">Your Job Title</h3>
+          <p id="workCompany">Company Name</p>
+          <p id="workYears">Years Worked</p>
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 My CV. All Rights Reserved.</p>
+  </footer>
+
+  <script>
+    function displayProfile() {
+      document.getElementById("profileName").innerText = localStorage.getItem("profileName") || "Your Name";
+      document.getElementById("profileTitle").innerText = localStorage.getItem("profileTitle") || "Your Title";
+      document.getElementById("profileSummary").innerText = localStorage.getItem("profileSummary") || "Your professional summary will appear here...";
+    }
+
+    function displayAcademic() {
+      document.getElementById("academicSchool").innerText = localStorage.getItem("academicSchool") || "Your School Name";
+      document.getElementById("academicDegree").innerText = localStorage.getItem("academicDegree") || "Your Degree";
+      document.getElementById("academicYears").innerText = localStorage.getItem("academicYears") || "Years Attended";
+    }
+
+    function displayWork() {
+      document.getElementById("workTitle").innerText = localStorage.getItem("workTitle") || "Your Job Title";
+      document.getElementById("workCompany").innerText = localStorage.getItem("workCompany") || "Company Name";
+      document.getElementById("workYears").innerText = localStorage.getItem("workYears") || "Years Worked";
+    }
+
+    window.onload = function() {
+      displayProfile();
+      displayAcademic();
+      displayWork();
+    };
+  </script>
+</body>
+</html>
