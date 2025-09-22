@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My CV</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    header {
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      color: white;
+      text-align: center;
+      padding: 2rem 1rem;
+      border-bottom: 4px solid #007acc;
+      position: relative;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    header button {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #fff;
+      color: #007acc;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    section {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      border-bottom: 2px solid #eee;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+      color: #007acc;
+    }
+
+    article {
+      margin-bottom: 1rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      background: #222;
+      color: #aaa;
+      margin-top: 2rem;
+    }
+
+    /* --- Form Modal --- */
+    #editor {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+
+    #editorContent {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: 600;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 0.6rem;
+      margin-top: 0.3rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    #editorContent button {
+      margin-top: 1rem;
+      background: #007acc;
+      color: #fff;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* --- Responsive Design --- */
+    @media (max-width: 768px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="profileName">Your Name</h1>
+    <p id="profileTitle">Your Title</p>
+    <button onclick="openEditor()">Edit CV</button>
+  </header>
+
+  <main>
+    <!-- Left Column -->
+    <div>
+      <section>
+        <h2>About Me</h2>
+        <p id="profileSummary">Your professional summary will appear here...</p>
+      </section>
+
+      <section>
+        <h2>Skills</h2>
+        <ul id="skillsList"></ul>
+      </section>
+    </div>
+
+    <!-- Right Column -->
+    <div>
+      <section>
+        <h2>Academic Experience</h2>
+        <article>
+          <h3 id="academicSchool">Your School Name</h3>
+          <p id="academicDegree">Your Degree</p>
+          <p id="academicYears">Years Attended</p>
+        </article>
+      </section>
+
+      <section>
+        <h2>Work Experience</h2>
+        <article>
+          <h3 id="workTitle">Your Job Title</h3>
+          <p id="workCompany">Company Name</p>
+          <p id="workYears">Years Worked</p>
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 My CV. All Rights Reserved.</p>
+  </footer>
+
+  <!-- Editor Modal -->
+  <div id="editor">
+    <div id="editorContent">
+      <h2>Edit CV</h2>
+      <form id="cvForm">
+        <label>Name</label>
+        <input type="text" id="formName">
+
+        <label>Title</label>
+        <input type="text" id="formTitle">
+
+        <label>Summary</label>
+        <textarea id="formSummary" rows="3"></textarea>
+
+        <label>Skills (comma separated)</label>
+        <input type="text" id="formSkills">
+
+        <label>School</label>
+        <input type="text" id="formSchool">
+
+        <label>Degree</label>
+        <input type="text" id="formDegree">
+
+        <label>Years Attended</label>
+        <input type="text" id="formAcademicYears">
+
+        <label>Work Title</label>
+        <input type="text" id="formWorkTitle">
+
+        <label>Company</label>
+        <input type="text" id="formWorkCompany">
+
+        <label>Work Years</label>
+        <input type="text" id="formWorkYears">
+
+        <button type="button" onclick="saveCV()">Save</button>
+        <button type="button" onclick="closeEditor()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const defaultCV = {
+      name: "Your Name",
+      title: "Your Title",
+      summary: "Your professional summary will appear here...",
+      skills: ["JavaScript", "HTML & CSS", "React", "Spring Boot"],
+      academic: {
+        school: "Your School Name",
+        degree: "Your Degree",
+        years: "Years Attended"
+      },
+      work: {
+        title: "Your Job Title",
+        company: "Company Name",
+        years: "Years Worked"
+      }
+    };
+
+    function getCV() {
+      return JSON.parse(localStorage.getItem("myCV")) || defaultCV;
+    }
+
+    function displayCV() {
+      const cv = getCV();
+      document.getElementById("profileName").innerText = cv.name;
+      document.getElementById("profileTitle").innerText = cv.title;
+      document.getElementById("profileSummary").innerText = cv.summary;
+
+      // Skills
+      const skillsList = document.getElementById("skillsList");
+      skillsList.innerHTML = "";
+      cv.skills.forEach(skill => {
+        const li = document.createElement("li");
+        li.innerText = skill;
+        skillsList.appendChild(li);
+      });
+
+      // Academic
+      document.getElementById("academicSchool").innerText = cv.academic.school;
+      document.getElementById("academicDegree").innerText = cv.academic.degree;
+      document.getElementById("academicYears").innerText = cv.academic.years;
+
+      // Work
+      document.getElementById("workTitle").innerText = cv.work.title;
+      document.getElementById("workCompany").innerText = cv.work.company;
+      document.getElementById("workYears").innerText = cv.work.years;
+    }
+
+    function openEditor() {
+      const cv = getCV();
+      document.getElementById("formName").value = cv.name;
+      document.getElementById("formTitle").value = cv.title;
+      document.getElementById("formSummary").value = cv.summary;
+      document.getElementById("formSkills").value = cv.skills.join(", ");
+      document.getElementById("formSchool").value = cv.academic.school;
+      document.getElementById("formDegree").value = cv.academic.degree;
+      document.getElementById("formAcademicYears").value = cv.academic.years;
+      document.getElementById("formWorkTitle").value = cv.work.title;
+      document.getElementById("formWorkCompany").value = cv.work.company;
+      document.getElementById("formWorkYears").value = cv.work.years;
+
+      document.getElementById("editor").style.display = "flex";
+    }
+
+    function closeEditor() {
+      document.getElementById("editor").style.display = "none";
+    }
+
+    function saveCV() {
+      const cv = {
+        name: document.getElementById("formName").value,
+        title: document.getElementById("formTitle").value,
+        summary: document.getElementById("formSummary").value,
+        skills: document.getElementById("formSkills").value.split(",").map(s => s.trim()).filter(s => s),
+        academic: {
+          school: document.getElementById("formSchool").value,
+          degree: document.getElementById("formDegree").value,
+          years: document.getElementById("formAcademicYears").value
+        },
+        work: {
+          title: document.getElementById("formWorkTitle").value,
+          company: document.getElementById("formWorkCompany").value,
+          years: document.getElementById("formWorkYears").value
+        }
+      };
+
+      localStorage.setItem("myCV", JSON.stringify(cv));
+      closeEditor();
+      displayCV();
+    }
+
+    window.onload = displayCV;
+  </script>
+</body>
+</html>
