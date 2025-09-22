@@ -1,0 +1,61 @@
+import java.time.Instant;
+
+public class ApiResponse<T> {
+    private String status;
+    private String message;
+    private T data;
+    private Instant timestamp;
+
+    private ApiResponse(String status, String message, T data) {
+        this.status = status;
+        this.message = message;
+        this.data = data;
+        this.timestamp = Instant.now();
+    }
+
+    public static <T> ApiResponse<T> success(T data, String message) {
+        return new ApiResponse<>("success", message, data);
+    }
+
+    public static <T> ApiResponse<T> error(String message) {
+        return new ApiResponse<>("error", message, null);
+    }
+
+    // getters
+}
+
+@Bean
+public RouterFunction<ServerResponse> routes(UserHandler handler) {
+    return RouterFunctions.route()
+            .GET("/users/{id}", handler::getUser)
+            .filter(errorHandler())
+            .build();
+}
+
+private HandlerFilterFunction<ServerResponse, ServerResponse> errorHandler() {
+    return (request, next) -> next.handle(request)
+            .onErrorResume(ex -> {
+                if (ex instanceof ForbiddenException) {
+                    return ServerResponse.status(HttpStatus.FORBIDDEN)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(ApiResponse.error(ex.getMessage()));
+                }
+                return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(ApiResponse.error("Unexpected error: " + ex.getMessage()));
+            });
+}
+
+
+public class ForbiddenException extends RuntimeException {
+    public ForbiddenException(String message) {
+        super(message);
+    }
+}
+
+public Mono<User> getUserData(String id, String role) {
+    if (!"ADMIN".equals(role)) {
+        return Mono.error(new ForbiddenException("You are not allowed to access this resource"));
+    }
+    return userRepository.findById(id);
+}
