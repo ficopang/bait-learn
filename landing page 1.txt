@@ -1,0 +1,156 @@
+// src/App.js
+import React from "react";
+import { Layout, Menu, Button, Typography, Row, Col, Card } from "antd";
+import {
+  DollarCircleOutlined,
+  SafetyCertificateOutlined,
+  ThunderboltOutlined,
+} from "@ant-design/icons";
+import "./App.css";
+
+const { Header, Content, Footer } = Layout;
+const { Title, Paragraph } = Typography;
+
+function App() {
+  return (
+    <Layout>
+      {/* Header */}
+      <Header style={{ position: "sticky", top: 0, zIndex: 10 }}>
+        <div className="logo" aria-label="Loan Application Logo">
+          LoanEase
+        </div>
+        <Menu
+          theme="dark"
+          mode="horizontal"
+          defaultSelectedKeys={["1"]}
+          items={[
+            { key: "1", label: "Home" },
+            { key: "2", label: "Features" },
+            { key: "3", label: "About" },
+          ]}
+          aria-label="Main Navigation"
+        />
+      </Header>
+
+      {/* Hero Section */}
+      <Content className="hero" role="main">
+        <Row justify="center" align="middle" className="hero-content">
+          <Col xs={24} md={12}>
+            <Title level={1}>Get Your Loan Faster & Smarter</Title>
+            <Paragraph>
+              Apply for loans with ease, track your limits, and enjoy a secure,
+              transparent process — all in one platform.
+            </Paragraph>
+            <Button type="primary" size="large" aria-label="Apply for a loan">
+              Apply Now
+            </Button>
+          </Col>
+          <Col xs={0} md={12} className="hero-image">
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/2331/2331943.png"
+              alt="Loan illustration"
+              style={{ maxWidth: "100%" }}
+            />
+          </Col>
+        </Row>
+      </Content>
+
+      {/* Features */}
+      <Content className="features" aria-labelledby="features-heading">
+        <Title id="features-heading" level={2} style={{ textAlign: "center" }}>
+          Why Choose LoanEase?
+        </Title>
+        <Row gutter={[16, 16]} justify="center" style={{ marginTop: "2rem" }}>
+          <Col xs={24} md={8}>
+            <Card
+              bordered={false}
+              hoverable
+              aria-label="Fast Approval Feature"
+            >
+              <ThunderboltOutlined style={{ fontSize: "2rem", color: "#1890ff" }} />
+              <Title level={4}>Fast Approval</Title>
+              <Paragraph>
+                Get loan approvals within minutes with our AI-driven evaluation.
+              </Paragraph>
+            </Card>
+          </Col>
+          <Col xs={24} md={8}>
+            <Card bordered={false} hoverable aria-label="Secure Platform Feature">
+              <SafetyCertificateOutlined
+                style={{ fontSize: "2rem", color: "#52c41a" }}
+              />
+              <Title level={4}>Secure Platform</Title>
+              <Paragraph>
+                Bank-level encryption ensures your personal and financial data
+                stays safe.
+              </Paragraph>
+            </Card>
+          </Col>
+          <Col xs={24} md={8}>
+            <Card bordered={false} hoverable aria-label="Flexible Loans Feature">
+              <DollarCircleOutlined
+                style={{ fontSize: "2rem", color: "#faad14" }}
+              />
+              <Title level={4}>Flexible Loans</Title>
+              <Paragraph>
+                Choose from multiple repayment options tailored to your needs.
+              </Paragraph>
+            </Card>
+          </Col>
+        </Row>
+      </Content>
+
+      {/* CTA */}
+      <Content className="cta">
+        <Row justify="center" align="middle">
+          <Col span={24} style={{ textAlign: "center" }}>
+            <Title level={2}>Ready to Get Started?</Title>
+            <Button type="primary" size="large" aria-label="Start application">
+              Start Application
+            </Button>
+          </Col>
+        </Row>
+      </Content>
+
+      {/* Footer */}
+      <Footer style={{ textAlign: "center" }}>
+        LoanEase ©{new Date().getFullYear()} | All Rights Reserved
+      </Footer>
+    </Layout>
+  );
+}
+
+export default App;
+
+.logo {
+  float: left;
+  color: #fff;
+  font-weight: bold;
+  font-size: 20px;
+  margin-right: 2rem;
+}
+
+.hero {
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #1890ff 30%, #001529 90%);
+  color: #fff;
+}
+
+.hero-content h1 {
+  color: #fff !important;
+}
+
+.features {
+  padding: 4rem 2rem;
+  background: #f9f9f9;
+}
+
+.cta {
+  padding: 3rem 2rem;
+  background: #1890ff;
+  color: #fff;
+}
+
+.cta h2 {
+  color: #fff !important;
+}
